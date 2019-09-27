@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Editor de Spyder
-
-Este es un archivo temporal.
 """
+
+#Ing. Paul Avendaño Elizondo
+
 
 import PyPDF2
 import re
