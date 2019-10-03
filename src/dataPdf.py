@@ -8,10 +8,10 @@
 import PyPDF2
 import re
 import PySimpleGUI as sg
-#import pandas as pd
 from openpyxl import Workbook, load_workbook 
 import os
 
+#extract the files paths in a list
 def listaAcuerdos (folder1):
     acuerdosList = []
     for path in os.listdir(folder1):
@@ -37,6 +37,7 @@ def unique (lista):
     element = lista[0]
     return element
 
+#extract the text from pdf
 def PDF (source):
     # pdf file object
     pdf = open(source, 'rb')
@@ -58,6 +59,7 @@ def PDF (source):
         page +=1
     return textPdf    
 
+#transalte the categorie
 def isCategorie (categoria):
     clase = ""
     if categoria =="Clase C":
@@ -68,6 +70,7 @@ def isCategorie (categoria):
         clase = "SUPERIOR"
     return clase    
 
+#is a company or a person
 def isCompany (patternJurid,textPdf,cedula):
     if patterns(patternJurid,textPdf):
         idAsocia = patterns(patternJurid,textPdf)
@@ -77,6 +80,7 @@ def isCompany (patternJurid,textPdf,cedula):
         data = cedula
         return data
 
+#is an adult or an under age request
 def isAdult(patternName, patternMenor, textPdf):
     if patterns(patternName,textPdf):
         names = patterns (patternName,textPdf)
@@ -90,6 +94,7 @@ def isAdult(patternName, patternMenor, textPdf):
         nombre = name.replace("menor","")
         return nombre
 
+#save the data into an excel file
 def saveExc (finalData, pathSave): 
     wb = Workbook()
     ws = wb.active
@@ -152,6 +157,21 @@ def fillData (dataTest1, dataTest2, patternInd, patternIcb, textPdf):
       
         return listaData
 
+#valid the path format
+def validSaveFile (patternFormatFile, finalData):
+    sg.Popup('Seleccione una carpeta dando click en \"Save as\"')
+    pathSave = sg.PopupGetFile('Guardar el archivo en formato .xlsx\nAgregar al final del nombre del archivo, la extensión \".xlsx\" para no tener inconvenientes al guardar el archivo.',default_path='.xlsx', default_extension='.xlsx', save_as=True, file_types=(('Excel', '.xlsx'),), no_window=False, font=None, no_titlebar=False, grab_anywhere=False)
+    if pathSave is None:
+        raise SystemExit
+   
+    paths = (patterns(patternFormatFile,pathSave))
+    
+    while len(paths) != 1:
+        sg.Popup('Favor guardar el archivo con un formato válido, donde se tiene que visualizar la ruta similar al siguiente ejemplo:\nC:\\Users\\paul.avendano\\Desktop\\NombreArchivo.xlsx')
+        pathSave = sg.PopupGetFile('Guardar el archivo en formato .xlsx\nAgregar al final del nombre del archivo, la extensión \".xlsx\" para no tener inconvenientes al guardar el archivo',default_path='', default_extension='.xlsx', save_as=True, file_types=(('Excel', '.xlsx'),), no_window=False, font=None, no_titlebar=False, grab_anywhere=False)
+        paths = (patterns(patternFormatFile,pathSave))
+    else:
+        saveExc (finalData, pathSave)
 
 #regex to import all the coincedences
 patternName = "[a-zA-Z]ermisionari[a-z]+\s[a-zA-Zá-úÁ-ÚñÑ\s]+C"
@@ -165,6 +185,7 @@ patternCb = "[a-zA-Z]anda\s[a-zA-Z]iudadana"
 patternInd = "TI[0-9][A-Z]+"
 patternIcb = "TEA[0-9][A-Z]+"
 patternPer = "[a-zA-Z]ermisionari[a-z]+\s"
+patternFormatFile= 'xlsx'
 
 folder = sg.PopupGetFolder("Seleccione la carpeta de sus archivos PDF")
 if folder is None:
@@ -174,6 +195,7 @@ listaData = []
 
 acuerdosList = listaAcuerdos (folder)
 cont = 0
+
 while cont < len(acuerdosList):
     path = acuerdosList[cont]
     textPdf = PDF (acuerdosList[cont])
@@ -211,11 +233,8 @@ for n in listaData:
     for x in n:
         finalData.append(x)
 
-sg.Popup('Seleccione una carpeta y escriba nombre del archivo a guardar')
-pathSave = sg.PopupGetFile('Guardar en formato Excel',default_path='.xlsx', default_extension='.xlsx', save_as=True, file_types=(("Excel", '.xlsx'),), no_window=False, font=None, no_titlebar=False, grab_anywhere=False)
 
-
-saveExc (finalData, pathSave)
+validSaveFile(patternFormatFile,finalData)
 
 ################################################# 
 # -*- coding: utf-8 -*-
